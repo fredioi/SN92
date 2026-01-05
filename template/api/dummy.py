@@ -1,7 +1,7 @@
 # The MIT License (MIT)
-# Copyright © 2021 Yuma Rao
-# Copyright © 2023 Opentensor Foundation
-# Copyright © 2023 Opentensor Technologies Inc
+# Copyright © 2023 Yuma Rao
+# TODO(developer): Set your name
+# Copyright © 2023 <your name>
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the “Software”), to deal in the Software without restriction, including without limitation
@@ -18,27 +18,61 @@
 # DEALINGS IN THE SOFTWARE.
 
 import bittensor as bt
-from typing import List, Optional, Union, Any, Dict
-from template.protocol import Dummy
-from bittensor.subnets import SubnetsAPI
+from template.protocol import Superpi
+from abc import ABC, abstractmethod
 
 
-class DummyAPI(SubnetsAPI):
-    def __init__(self, wallet: "bt.Wallet"):
-        super().__init__(wallet)
-        self.netuid = 33
-        self.name = "dummy"
+class SubnetsAPI(ABC):
+    """
+    Base class for all subnet APIs.
+    """
+    subnet: int = None
 
-    def prepare_synapse(self, dummy_input: int) -> Dummy:
-        synapse.dummy_input = dummy_input
+    def __init__(self, wallet: bt.Wallet, subtensor: bt.Subtensor):
+        self.wallet = wallet
+        self.subtensor = subtensor
+
+    @abstractmethod
+    def prepare_synapse(self) -> Superpi:
+        """
+        Prepare the synapse object for the forward call.
+        """
+        pass
+
+    @abstractmethod
+    def process_responses(self, responses: list[Superpi]) -> list:
+        """
+        Process the responses from the miners.
+        """
+        pass
+
+
+class SuperpiAPI(SubnetsAPI):
+    subnet: int = 92
+
+    def prepare_synapse(self) -> Superpi:
+        """
+        Prepare the synapse object for the forward call.
+        """
+        synapse = Superpi()
         return synapse
 
-    def process_responses(
-        self, responses: List[Union["bt.Synapse", Any]]
-    ) -> List[int]:
-        outputs = []
+    def process_responses(self, responses: list[Superpi]) -> float:
+        """
+        Process the responses from the miners.
+        
+        Args:
+            responses: List of Superpi objects from miners
+            
+        Returns:
+            float: The average of all valid pi values returned
+        """
+        valid_responses = []
         for response in responses:
-            if response.dendrite.status_code != 200:
-                continue
-            return outputs.append(response.dummy_output)
-        return outputs
+            if response and response.pi_value is not None:
+                valid_responses.append(response.pi_value)
+        
+        if not valid_responses:
+            return 0.0
+        
+        return sum(valid_responses) / len(valid_responses)

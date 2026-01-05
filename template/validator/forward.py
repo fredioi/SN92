@@ -19,8 +19,9 @@
 
 import time
 import bittensor as bt
+import numpy as np
 
-from template.protocol import Dummy
+from template.protocol import Superpi
 from template.validator.reward import get_rewards
 from template.utils.uids import get_random_uids
 
@@ -39,25 +40,35 @@ async def forward(self):
     # get_random_uids is an example method, but you can replace it with your own.
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
 
+    bt.logging.info(f"Querying miner uids: {miner_uids}")
+
     # The dendrite client queries the network.
     responses = await self.dendrite(
         # Send the query to selected miner axons in the network.
         axons=[self.metagraph.axons[uid] for uid in miner_uids],
-        # Construct a dummy query. This simply contains a single integer.
-        synapse=Dummy(dummy_input=self.step),
+        # Construct a Superpi query.
+        synapse=Superpi(),
         # All responses have the deserialize function called on them before returning.
         # You are encouraged to define your own deserialization function.
         deserialize=True,
     )
 
     # Log the results for monitoring purposes.
-    bt.logging.info(f"Received responses: {responses}")
+    bt.logging.info(f"Received Superpi responses: {responses}")
 
     # TODO(developer): Define how the validator scores responses.
     # Adjust the scores based on responses from miners.
-    rewards = get_rewards(self, query=self.step, responses=responses)
+    rewards = get_rewards(self, responses=responses)
 
     bt.logging.info(f"Scored responses: {rewards}")
     # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
     self.update_scores(rewards, miner_uids)
+    
+    # Record scores for each uid node
+    for i, uid in enumerate(miner_uids):
+        response = responses[i] if i < len(responses) else None
+        score = rewards[i] if i < len(rewards) else 0
+        submission_status = "success" if response == 3.141592654 else "failed"
+        bt.logging.info(f"UID {uid} - Response: {response}, Score: {score}, Status: {submission_status}")
+    
     time.sleep(5)

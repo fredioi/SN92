@@ -22,55 +22,51 @@ import bittensor as bt
 
 # TODO(developer): Rewrite with your protocol definition.
 
-# This is the protocol for the dummy miner and validator.
+# This is the protocol for the Superpi miner and validator.
 # It is a simple request-response protocol where the validator sends a request
-# to the miner, and the miner responds with a dummy response.
+# to the miner, and the miner responds with the value of pi.
 
 # ---- miner ----
 # Example usage:
-#   def dummy( synapse: Dummy ) -> Dummy:
-#       synapse.dummy_output = synapse.dummy_input + 1
+#   def get_superpi( synapse: Superpi ) -> Superpi:
+#       synapse.pi_value = 3.141592654
 #       return synapse
-#   axon = bt.Axon().attach( dummy ).serve(netuid=...).start()
+#   axon = bt.Axon().attach( get_superpi ).serve(netuid=...).start()
 
 # ---- validator ---
 # Example usage:
 #   dendrite = bt.Dendrite()
-#   dummy_output = dendrite.query( Dummy( dummy_input = 1 ) )
-#   assert dummy_output == 2
+#   pi_value = dendrite.query( Superpi() )
+#   assert pi_value == 3.141592654
 
 
-class Dummy(bt.Synapse):
+class Superpi(bt.Synapse):
     """
-    A simple dummy protocol representation which uses bt.Synapse as its base.
-    This protocol helps in handling dummy request and response communication between
+    A protocol for requesting the value of pi from miners.
+    This protocol helps in handling Superpi request and response communication between
     the miner and the validator.
 
     Attributes:
-    - dummy_input: An integer value representing the input request sent by the validator.
-    - dummy_output: An optional integer value which, when filled, represents the response from the miner.
+    - pi_value: An optional float value which, when filled, represents the response from the miner.
     """
 
-    # Required request input, filled by sending dendrite caller.
-    dummy_input: int
-
     # Optional request output, filled by receiving axon.
-    dummy_output: typing.Optional[int] = None
+    pi_value: typing.Optional[float] = None
 
-    def deserialize(self) -> int:
+    def deserialize(self) -> float:
         """
-        Deserialize the dummy output. This method retrieves the response from
-        the miner in the form of dummy_output, deserializes it and returns it
+        Deserialize the pi value. This method retrieves the response from
+        the miner in the form of pi_value, deserializes it and returns it
         as the output of the dendrite.query() call.
 
         Returns:
-        - int: The deserialized response, which in this case is the value of dummy_output.
+        - float: The deserialized response, which in this case is the value of pi_value.
 
         Example:
-        Assuming a Dummy instance has a dummy_output value of 5:
-        >>> dummy_instance = Dummy(dummy_input=4)
-        >>> dummy_instance.dummy_output = 5
-        >>> dummy_instance.deserialize()
-        5
+        Assuming a Superpi instance has a pi_value of 3.141592654:
+        >>> superpi_instance = Superpi()
+        >>> superpi_instance.pi_value = 3.141592654
+        >>> superpi_instance.deserialize()
+        3.141592654
         """
-        return self.dummy_output
+        return self.pi_value
